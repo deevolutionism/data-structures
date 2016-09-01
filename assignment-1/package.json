@@ -1,0 +1,20 @@
+{
+  "name": "assignment-1",
+  "version": "1.0.0",
+  "description": "data structures assignment 1 get 10 urls",
+  "main": "server.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Gentry Demchak",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "express": "^4.14.0",
+    "request": "^2.74.0"
+  }
+}
