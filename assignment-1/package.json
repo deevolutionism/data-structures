@@ -13,6 +13,7 @@
   "author": "Gentry Demchak",
   "license": "ISC",
   "dependencies": {
+    "async": "^2.0.1",
     "cheerio": "^0.22.0",
     "express": "^4.14.0",
     "request": "^2.74.0"
