@@ -30,15 +30,43 @@ var documents = [];
 // });
 
 
-// for(var i = 0; i < boroughs.length; i++){
-//   request('http://visualizedata.github.io/datastructures/data/m'+boroughs[i]+'.html', function(error, response, body){
-//     if(!error && response.statusCode == 200){
-//       fs.writeFile(body,'data/'+boroughs[i]+'.txt',function());
-//     } else {
-//       console.error('error!');
-//     }
-//   });
-// }
+
+var write = function(count, doc) { //write the data to disk
+  var fileName = 'data/'+boroughs[count]+'.txt';
+  fs.writeFile(fileName, documents[count], 'utf-8', function(err){
+    if(err){
+      console.log('failed to save');
+    } else {
+      if(count < boroughs.length){
+      console.log(fileName);
+      write(count += 1);
+      }
+      console.log('suceeded in saving');
+    }
+  });
+}
+
+var getData = function(n){
+  if(documents.length < boroughs.length){
+    var url = 'http://visualizedata.github.io/datastructures/data/m'+boroughs[n]+'.html';
+    request(url, function(error, response, body){
+      if(!error && response.statusCode == 200){
+        documents.push(body);
+        console.log(url);
+        getData(n+=1);
+      } else {
+        console.error('error!');
+      }
+    });
+  } else {
+    write(0);
+  }
+}
+
+getData(0);
+
+
+
 
   // new Promise(function(resolve, reject) {
   // 	// A mock async action using setTimeout
@@ -57,26 +85,26 @@ var documents = [];
   // });
 
 
-  new Promise(function(resolve, reject) {
-    for(var i = 0; i<boroughs.length; i++){
-      console.log(i);
-      request('http://visualizedata.github.io/datastructures/data/m'+boroughs[i]+'.html', function(error, response, body){
-        documents.push(body);
-        console.log(i);
-      });
-    }
-  }).then(function(result){
-    console.log('hey');
-    async.each(documents, saveFile, function(err){
-      console.log(err);
-    });
-  });
-
-  function saveFile(file){
-    console.log('saved a file');
-    fs.writeFileSync('data/'+boroughs[count]+'.txt', file);
-    count++;
-  }
+  // new Promise(function(resolve, reject) {
+  //   for(var i = 0; i<boroughs.length; i++){
+  //     console.log(i);
+  //     request('http://visualizedata.github.io/datastructures/data/m'+boroughs[i]+'.html', function(error, response, body){
+  //       documents.push(body);
+  //       console.log(i);
+  //     });
+  //   }
+  // }).then(function(result){
+  //   console.log('hey');
+  //   async.each(documents, saveFile, function(err){
+  //     console.log(err);
+  //   });
+  // });
+  //
+  // function saveFile(file){
+  //   console.log('saved a file');
+  //   fs.writeFileSync('data/'+boroughs[count]+'.txt', file);
+  //   count++;
+  // }
 
 
 
