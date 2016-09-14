@@ -1,0 +1,17 @@
+{
+  "name": "assignment-3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Gentry Demchak",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.0.1",
+    "cheerio": "^0.22.0",
+    "request": "^2.74.0"
+  }
+}
