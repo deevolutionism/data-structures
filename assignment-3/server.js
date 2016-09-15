@@ -4,99 +4,106 @@ var cheerio = require('cheerio');
 var fs = require('fs');
 var $;
 
-// SETTING ENVIRONMENT VARIABLES (in Linux):
-// export NEW_VAR="Content of NEW_VAR variable"
-// printenv | grep NEW_VAR
 var apiKey = process.env.GMAKE;
 
 var meetingsData = {};
-var addresses = ["63 Fifth Ave, New York, NY", "16 E 16th St, New York, NY", "2 W 13th St, New York, NY"];
 
-// eachSeries in the async module iterates over an array and operates on each item in the array in series
-// async.eachSeries(addresses, function(value, callback) {
-//     var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + value.split(' ').join('+') + '&key=' + apiKey;
-//     var thisMeeting = new Object;
-//     thisMeeting.address = value;
-//     request(apiRequest, function(err, resp, body) {
-//         if (err) {throw err;}
-//         thisMeeting.latLong = JSON.parse(body).results[0].geometry.location;
-//         meetingsData.push(thisMeeting);
-//     });
-//     setTimeout(callback, 2000);
-// }, function() {
-//     console.log(meetingsData);
-// });
+var doTheThings = {
 
-var parse = function(data,callback){
-  $ = cheerio.load(data);
-  $('#meetings_tbody')
-  .children()
-  .each(function(i,elem){
-    var group = {};
-    var name = $(elem).find('.name a').text().trim();
-    if(meetingsData[name] === undefined){ //check if meeting group has been added
-      group['location'] = $(elem).find('.location').text().trim();
-      group['address'] = $(elem).find('.address').text().trim();
-      group['type'] = $(elem).find('.types').text();
-      group['link'] = $(elem).find('.name a').attr('href');
-      group['time'] = [$(elem).find('.time').attr('data-sort')];
-      meetingsData[name] = group; //add meeting group data to the collection
-    } else {
-      console.log(meetingsData[name].time);
-      meetingsData[name].time.push($(elem).find('.time').attr('data-sort'));
-    }
-  });
-  return callback()
-}
+  parse: function(data, callback){
+    console.log('parsing . . . ');
+    $ = cheerio.load(data);
+    $('#meetings_tbody')
+    .children()
+    .each(function(i,elem){
+      var group = {};
+      var name = $(elem).find('.name a').text().trim();
+      if(meetingsData[name] === undefined){ //check if meeting group has been added
+        group['location'] = $(elem).find('.location').text().trim();
+        group['address'] = $(elem).find('.address').text().trim();
+        group['type'] = $(elem).find('.types').text();
+        group['link'] = $(elem).find('.name a').attr('href');
+        group['time'] = [$(elem).find('.time').attr('data-sort')];
+        group['region'] = $(elem).find('.region').text();
+        meetingsData[name] = group; //add meeting group data to the collection
+      } else {
+        // console.log(meetingsData[name].time);
+        meetingsData[name].time.push($(elem).find('.time').attr('data-sort'));
+      }
+    });
+    return callback()
+  },
 
-var getNotes = function(){
-  var count = 0;
-  async.eachSeries(meetingsData,function(value,callback){
-    request(value.name,function(error,response,body){
+  getGroupData: function(){
+    request('http://meetings.nyintergroup.org/meetings/we?d=any&v=list',function(error,response,body){
+      $ = cheerio.load(body);
+      $('dt').each(function(i,elem){
+        console.log('===========');
+        console.log($(elem).html());
+      });
+    });
+  },
+
+  getGeometriesRecursively: function(url, callback){
+
+  },
+
+  makeRequest: function(url, callback){
+    console.log('requesting ' + url + ' >>>');
+    request(url,function(error,response,body){
       if(!error && response.statusCode == 200){
-        count++;
-        fs.writeFile('data/'+count+'.txt', body, function(error){
-          if(!error){
-            console.log('wrote ' + value.name);
-          } else {
-            console.log(error);
+        fs.writeFile('data/aameetings.txt',body,function(err){
+          if(err){
+            console.log(err);
+          } else{
+            return callback()
           }
         });
       } else {
         console.log(error);
       }
-      return callback()
     });
-  });
-}
+  },
 
-
-fs.readFile('data/aameetings.txt','utf8',function(error,data){
-
-  parse(data,function(){
-    // console.log(meetingsData);
-    fs.writeFile('data/meeting-groups.json',data,function(err){
-      if(err){
-        console.log(err);
+  readData: function(){
+    console.log('reading aameetings.txt');
+    fs.readFile('data/aameetings.txt','utf8',function(error,data){
+      if(error){
+        console.log(error);
       } else {
-        console.log(meetingsData);
+        doTheThings.parse(data,function(){ //parse file
+          // console.log(meetingsData);
+          console.log('writing meeting-groups file . . .');
+          fs.writeFile('data/meeting-groups.json',JSON.stringify(meetingsData),function(err){
+            if(err){
+              console.log(err);
+            } else {
+              // console.log(meetingsData);
+              doTheThings.getGroupData();
+            }
+          });
+          // getNotes();
+        });
       }
     });
-    // getNotes();
-  });
+  },
 
-});
+  requestMeetings: function(){
+    //first check if the data file already exists
+    fs.readFile('data/aameetings.txt', function(error,data){
+      if(error){ //file doesn't exist, make a request to get it.
+        console.log('making data/ directory');
+        fs.mkdirSync('data/'); //create the directory
+        doTheThings.makeRequest('http://meetings.nyintergroup.org/?d=any&v=list', function(){
+          console.log('saved file');
+          doTheThings.readData();
+        });
+      } else { //file exists already, read and parse it.
+        doTheThings.readData();
+      }
+    });
+  }
 
-// request('http://meetings.nyintergroup.org/?d=any&v=list',function(error,response,body){
-//   if(!error && response.statusCode == 200){
-//     fs.writeFile('data/aameetings.txt',body,function(err){
-//       if(err){
-//         console.log(err);
-//       } else{
-//         console.log('saved file');
-//       }
-//     });
-//   } else {
-//     console.log(error);
-//   }
-// });
+}
+
+doTheThings.requestMeetings();
