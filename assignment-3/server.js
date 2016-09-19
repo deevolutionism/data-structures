@@ -2,11 +2,14 @@ var request = require('request'); // npm install request
 var async = require('async'); // npm install async
 var cheerio = require('cheerio');
 var fs = require('fs');
+var _ = require('lodash');
+var object = require('lodash/fp/object');
 var $;
 
 var apiKey = process.env.GMAKE;
 
 var meetingsData = {};
+var addresses = [];
 
 var doTheThings = {
 
@@ -21,7 +24,9 @@ var doTheThings = {
       if(meetingsData[name] === undefined){ //check if meeting group has been added
         group['location'] = $(elem).find('.location').text().trim();
         group['address'] = $(elem).find('.address').text().trim();
+        addresses.push($(elem).find('.address').text().trim());
         group['type'] = $(elem).find('.types').text();
+        group['geometries'] = null;
         group['link'] = $(elem).find('.name a').attr('href');
         group['time'] = [$(elem).find('.time').attr('data-sort')];
         group['region'] = $(elem).find('.region').text();
@@ -44,11 +49,41 @@ var doTheThings = {
     });
   },
 
-  getGeometriesRecursively: function(url, callback){
+  getGeometries: function() {
+    console.log('requesting geometries from google maps api . . . ');
+    var geometries = null;
+    // var address = addresses[count];
+
+    //loop through each address
+    //find the group associated with the address
+    //get long and lat from google maps
+    //store geomertries with the group
+
+    async.eachSeries(addresses, function(value, callback) {
+        var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + value.split(' ').join('+') + '&key=' + apiKey;
+        var group = _.findKey(meetingsData, function(group){return group.address == value;});
+        console.log(group);
+        request(apiRequest, function(err, resp, body) {
+            if (err) {console.log(err)}
+            if(response.status != 'ZERO_RESULTS'){
+              console.log(JSON.parse(body).results[0].geometry.location);
+              meetingsData[group].geometries = JSON.parse(body).results[0].geometry.location;
+            // _.set(meetingsData,group.geometries,JSON.parse(body).results[0].geometry.location);
+            // console.log(meetingsData[group]);
+            }
+        });
+        setTimeout(callback, 500);
+    }, function() {
+        fs.writeFile('data/meeting-group.txt',meetingsData,function(err){
+          if(err){throw err}
+          console.log('success');
+        });
+        console.log(meetingsData);
+    });
 
   },
 
-  makeRequest: function(url, callback){
+  makeRequest: function(url, callback){//3.a
     console.log('requesting ' + url + ' >>>');
     request(url,function(error,response,body){
       if(!error && response.statusCode == 200){
@@ -65,7 +100,7 @@ var doTheThings = {
     });
   },
 
-  readData: function(){
+  readData: function(){ //3.b
     console.log('reading aameetings.txt');
     fs.readFile('data/aameetings.txt','utf8',function(error,data){
       if(error){
@@ -79,7 +114,9 @@ var doTheThings = {
               console.log(err);
             } else {
               // console.log(meetingsData);
-              doTheThings.getGroupData();
+              // doTheThings.getGroupData();
+              console.log(addresses.length)
+              doTheThings.getGeometries();
             }
           });
           // getNotes();
@@ -89,16 +126,16 @@ var doTheThings = {
   },
 
   requestMeetings: function(){
-    //first check if the data file already exists
+    //1. first check if the data file already exists
     fs.readFile('data/aameetings.txt', function(error,data){
-      if(error){ //file doesn't exist, make a request to get it.
+      if(error){ // 2.a file doesn't exist, make a request to get it.
         console.log('making data/ directory');
         fs.mkdirSync('data/'); //create the directory
         doTheThings.makeRequest('http://meetings.nyintergroup.org/?d=any&v=list', function(){
           console.log('saved file');
-          doTheThings.readData();
+          doTheThings.readData(); //3.a
         });
-      } else { //file exists already, read and parse it.
+      } else { //2.b file exists already, read and parse it.
         doTheThings.readData();
       }
     });

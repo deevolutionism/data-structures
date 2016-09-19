@@ -12,6 +12,7 @@
   "dependencies": {
     "async": "^2.0.1",
     "cheerio": "^0.22.0",
+    "lodash": "^4.15.0",
     "request": "^2.74.0"
   }
 }
