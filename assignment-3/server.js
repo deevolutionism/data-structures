@@ -77,7 +77,7 @@ var doTheThings = {
         });
         setTimeout(callback, 500);
     }, function() {
-        fs.writeFile('data/meeting-group.txt',meetingsData,function(err){
+        fs.writeFile('data/meeting-groups.json',JSON.stringify(meetingsData),function(err){
           if(err){throw err}
           console.log(emoji.emojify('saved geometries! :rocket:'));
         });
