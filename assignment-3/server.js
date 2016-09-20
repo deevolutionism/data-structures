@@ -3,8 +3,11 @@ var async = require('async'); // npm install async
 var cheerio = require('cheerio');
 var fs = require('fs');
 var _ = require('lodash');
+var emoji = require('node-emoji');
 var object = require('lodash/fp/object');
 var $;
+
+
 
 var apiKey = process.env.GMAKE;
 
@@ -65,18 +68,18 @@ var doTheThings = {
         console.log(group);
         request(apiRequest, function(err, resp, body) {
             if (err) {console.log(err)}
-            if(response.status != 'ZERO_RESULTS'){
-              console.log(JSON.parse(body).results[0].geometry.location);
+            if(JSON.parse(body).status == 'OK'){
+              console.log(emoji.emojify(':globe_with_meridians: '+JSON.parse(body).results[0].geometry.location));
               meetingsData[group].geometries = JSON.parse(body).results[0].geometry.location;
             // _.set(meetingsData,group.geometries,JSON.parse(body).results[0].geometry.location);
             // console.log(meetingsData[group]);
-            }
+          }
         });
         setTimeout(callback, 500);
     }, function() {
         fs.writeFile('data/meeting-group.txt',meetingsData,function(err){
           if(err){throw err}
-          console.log('success');
+          console.log(emoji.emojify('saved geometries! :rocket:'));
         });
         console.log(meetingsData);
     });
