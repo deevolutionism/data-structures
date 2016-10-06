@@ -10,7 +10,7 @@ var colors = require("colors/safe");
 var $;
 var url = 'mongodb://localhost:27017/aameetings';
 var MongoClient = require('mongodb').MongoClient;
-
+const assert = require('assert');
 
 
 var apiKey = process.env.GMAKE;
@@ -19,6 +19,7 @@ var meetingsData = [];
 var mapsMeetingsData = [];
 var addresses = {};
 var collectionName = 'aagroup';
+var noIndex = [];
 
 var doTheThings = {
 
@@ -33,9 +34,7 @@ var doTheThings = {
         group['location'] = $(elem).find('.location').text().trim();
         group['address'] = $(elem).find('.address').text().trim();
         var address = $(elem).find('.address').text().trim() + 'New York NY';
-        // addresses.push(address);
         group['type'] = $(elem).find('.types').text();
-        group['geometries'] = null;
         group['name'] = name;
         group['link'] = $(elem).find('.name a').attr('href');
         group['time'] = $(elem).find('.time').attr('data-sort');
@@ -85,37 +84,34 @@ var doTheThings = {
 
   getGeometries: function(data) {
     console.log('requesting geometries from google maps api . . . ');
-    var geometries = null;
-    meetingsData = JSON.parse(data);
-    console.log(typeof meetingsData);
-    // var address = addresses[count];
+    console.log(data);
 
     //loop through each address
     //find the group associated with the address
     //get long and lat from google maps
     //store geomertries with the group
     var count = 0;
-    async.eachSeries(meetingsData, function(value, callback) {
+    async.eachSeries(JSON.parse(data), function(value, callback) {
         var apiRequest = `https://maps.googleapis.com/maps/api/geocode/json?address=${value.address.split(' ')}+${value.region.split(' ').join('+')}+NY&key=${apiKey}`;
 
         if(addresses[value.address] == undefined){ //prevent querying duplicate locations by keeping track
           request(apiRequest, function(err, resp, body) {
             if (err) {console.log(err)}
             if(JSON.parse(body).status == 'OK'){
-              console.log('hey');
-              addresses[value.address] = true;
               count++;
               console.log('===========');
               console.log(count);
               console.log(apiRequest);
               console.log(emoji.emojify(`:globe_with_meridians: ${JSON.parse(body).results[0].geometry.location}`));
-              value['lat_long'] = JSON.parse(body).results[0].geometry.location;
-              value['formatted_address'] = JSON.parse(body).results[0].formattedAddress;
+              value['lat'] = JSON.parse(body).results[0].geometry.location.lat;
+              value['long'] = JSON.parse(body).results[0].geometry.location.lng;
+              value['formatted_address'] = JSON.parse(body).results[0].formatted_address;
               mapsMeetingsData.push(value);
+              addresses[value.address] = true;
               for(var i = 0; i<meetingsData.length; i++){ //search for duplicate locations and add the formatted address
-                if( meetingsData[i].address == value.address){
+                if( mapsMeetingsData[i].address == value.address){
                   console.log(`found duplicate for ${value.address}`);
-                  meetingsData[i].formatted_address = value['formatted-address'];
+                  mapsMeetingsData[i].formatted_address = value['formatted_address'];
                 }
               }
             }
@@ -128,6 +124,7 @@ var doTheThings = {
           if (err) {return console.dir(err);}
           var collection = db.collection(collectionName);
           // THIS IS WHERE THE DOCUMENT(S) IS/ARE INSERTED TO MONGO:
+          console.log(mapsMeetingsData.length);
           for (var i=0; i < mapsMeetingsData.length; i++) {
             collection.insert(mapsMeetingsData[i]);
           }
@@ -214,10 +211,29 @@ var testMongo = function(){
   });
 }
 
-var query = function(){
-  MongoClient.connect(url, function(err, db) {
+var putFileMongo = function(file){
+  fs.readFile(`data/${file}`,'utf8',function(err, data){
+    if(err){console.log(err)}
+    else {
+      var parsedData = JSON.parse(data);
+
+      MongoClient.connect(url, (err, db) => {
+        if(err){return console.dir(err);}
+        var collection = db.collection('aagroups');
+        for(var i = 0; i<parsedData.length;i++){
+          collection.insert(parsedData[i]);
+        }
+        console.log('success');
+      });
+    }
+  });
+}
+
+var query = function(count){
+  count++;
+  var datetimeStart = new Date();
+  MongoClient.connect(url, (err, db) => {
     if (err) {return console.dir(err);}
-    var datetimeStart = new Date();
     var collection = db.collection('aa_meeting_time');
 
     collection.find({$and: [{'day':'2'},{'time':{$gte:'19:00'}}]}).toArray(function(err, docs) {
@@ -230,15 +246,17 @@ var query = function(){
           });
         }
         db.close();
+        noIndex.push(new Date() - datetimeStart);
         console.log("This process completed in", new Date() - datetimeStart, "milliseconds.");
+        count < 25 ? query(count) : console.log(done);
     });
   });
 }
 
-var refactorTime = function(){
+var refactorTime = () => {
   MongoClient.connect(url, function(err, db){
     if(err){return console.dir(err);}
-    var collection = db.collection(collectionName);
+    var collection = db.collection('aagroups');
     collection.aggregate().toArray(function(err, docs){
       if(err){console.log(err)}
       else {
@@ -251,12 +269,54 @@ var refactorTime = function(){
           // meetingsData.push(group);
         }
         console.log(docs.length);
-        var collection = db.collection('aa_meeting_time');
-        collection.insert(docs);
+        for(var j = 0; j<docs.length; j++){
+          console.log('hey')
+          db.collection('aagroups_02').insert(docs[j]);
+        }
       }
     });
   });
 }
+
+var updateTime = (db,callback) => {
+
+  db.collection('aagroups').updateMany(
+     {},
+     {
+       $set: { time: $time.substr($time.indexOf('-') + 1) },
+       $set: { "day": $time[0] }
+     }
+     ,
+     (err, results) => {
+       console.log(results);
+       callback();
+     }
+  );
+}
+
+
+var UpdateTime = () => {
+  MongoClient.connect(url, function(err, db) {
+  assert.equal(null, err);
+
+  updateTime(db, function() {
+      db.close();
+  });
+});
+}
+
+var update_time = () => {
+  MongoClient.connect(url, (err, db)=>{
+    if(err){console.log(err)} else {
+      db.collection('aagroups').find({}).forEach(function(e,i) {
+        console.log(e.time);
+        e.time=e.time.replace(e.time.substr(e.time.indexOf('-')));
+        db.aagroups.save(e);
+      });
+    }
+});
+}
+
 
 // console.log('type ' + colors.cyan('request meetings') + ' or ' + colors.cyan('write to database') + ' or ');
 console.log(
@@ -266,10 +326,11 @@ console.log(
    3 for => ${colors.cyan('test mongo')}
    4 for => ${colors.cyan('get geometries')}
    5 for => ${colors.cyan('refactor time')}
+   6 for => ${colors.cyan('put file to mongo')}
 `);
 
 prompt.start();
-prompt.get(['function'], (err, result)=>{
+prompt.get(['function'], (err, result) => {
   console.log(result.function);
   if(result.function == 1){
     doTheThings.requestMeetings();
@@ -278,12 +339,16 @@ prompt.get(['function'], (err, result)=>{
   } else if(result.function == 3){
     testMongo();
   } else if(result.function == 4){
-    fs.readFile('data/meeting-groups.json','utf8',function(err, data){
+    fs.readFile('data/meeting-groups.json','utf8',(err, data) => {
       doTheThings.getGeometries(data);
     });
     // doTheThings.getGeometries();
   } else if(result.function == 5){
     refactorTime();
+    // UpdateTime();
+    // update_time();
+  } else if(result.function == 6){
+    putFileMongo('google-meeting-groups.json');
   }
 });
 // doTheThings.requestMeetings();
