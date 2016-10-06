@@ -9,6 +9,8 @@ latency with an index of the aagroups_02 collection:
 ![graphic showing latency in ms of 25 identical mongodb queries]
 (./data/withIndex.png)
 
+surprisingly, indexed queryies were slower to complete than non-indexed queries. :neutral_face: 
+
 # Example Query
 `collection.find({$and: [{'day':'2'},{'time':{$gte:'19:00'}}]})`
 
