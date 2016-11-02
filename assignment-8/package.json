@@ -1,0 +1,16 @@
+{
+  "name": "assignment-8",
+  "version": "1.0.0",
+  "description": "",
+  "main": "blink.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Gentry Demchak",
+  "license": "ISC",
+  "dependencies": {
+    "johnny-five": "^0.10.3",
+    "pg": "^6.1.0"
+  }
+}
