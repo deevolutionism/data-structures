@@ -20,7 +20,7 @@ var getMapData = () => {
 }
 
 
-function example(data) {
+var example = (data) => {
   var locations = [];
   var names = [];
   for(let i = 0; i < data.result.length; i++){
@@ -42,12 +42,6 @@ function example(data) {
     marker.addListener('click', () => {
     infowindow.open(map, marker);
   });
-  }
-}
-
-function markerClosure(location) {
-  return () => {
-
   }
 }
 
@@ -114,7 +108,7 @@ var initMap = (data) => {
 
 
 
-function initialize(data) {
+var initialize = (data) => {
     var map;
     var markers = [];
 
