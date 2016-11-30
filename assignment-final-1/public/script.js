@@ -23,25 +23,71 @@ var getMapData = () => {
 var example = (data) => {
   var locations = [];
   var names = [];
+  var groups = [];
   for(let i = 0; i < data.result.length; i++){
     locations.push({'lat':data.result[i].lat,'lng':data.result[i].long});
     names.push(data.result[i].name)
+    groups.push(data.result[i]);
   }
   var map = new google.maps.Map(document.getElementById('map'), {
     zoom: 12,
     center: {lat:40.7831, lng:-73.9712}
   });
-  for(var i = 0; i<locations.length;i++){
+
+  var infowindow = new google.maps.InfoWindow();
+
+  for(var i = 0; i<data.result.length;i++){
     let marker = new google.maps.Marker({
       position: locations[i],
       map: map
     });
-    let infowindow = new google.maps.InfoWindow({
-      content: names[i]
-    });
+
+    let windowContent = `
+      <h1>${data.result[i].name}</h1>
+      <ul>
+        <li>${data.result[i].time}</li>
+        <li>${data.result[i].location}, ${data.result[i].formatted_address}</li>
+        <li>${data.result[i].type}</li>
+        <li><a href=${data.result[i].link}>${data.result[i].link}</a></li>
+        <li>${num_to_day(data.result[i].day)}</li>
+      </ul>
+    `
+
     marker.addListener('click', () => {
-    infowindow.open(map, marker);
-  });
+      infowindow.close(); // Close previously opened infowindow
+      infowindow.setContent( windowContent );
+      infowindow.open(map, marker);
+    });
+
+  }
+}
+
+
+var num_to_day = (num) => {
+  switch (num) {
+    case '0':
+      return 'Sunday'
+      break;
+    case '1':
+      return 'Monday'
+      break;
+    case '2':
+      return 'Tuesday'
+      break;
+    case '3':
+      return 'Wednesday'
+      break;
+    case '4':
+      return 'Thursday'
+      break;
+    case '5':
+      return 'Friday'
+      break;
+    case '6':
+      return 'Saturday'
+      break;
+    default:
+      return undefined
   }
 }
 
@@ -62,46 +108,6 @@ var initMap = (data) => {
     center: {lat: 40.7831, lng: -73.9712},
     zoom: 12
   });
-
-  // var displayMapPin = (data) => {
-  //   console.log(data);
-  //   let marker = new google.maps.Marker({
-  //     position: new google.maps.LatLng(data.locations[j].lat, data.locations[j].long),
-  //     map: map
-  //   });
-  // }
-  //
-  // var makeMapPin = (data) => {
-  //   console.log('?')
-  //   return () => {
-  //     console.log('something??');
-  //     displayMapPin(data);
-  //   }
-  // }
-
-  // for( i = 0; i < markers.length; i++ ) {
-  //       var position = new google.maps.LatLng(markers[i][1], markers[i][2]);
-  //       bounds.extend(position);
-  //       marker = new google.maps.Marker({
-  //           position: position,
-  //           map: map,
-  //           title: markers[i][0]
-  //       });
-  //
-  //       // Allow each marker to have an info window
-  //       google.maps.event.addListener(marker, 'click', (function(marker, i) {
-  //           return function() {
-  //               infoWindow.setContent(infoWindowContent[i][0]);
-  //               infoWindow.open(map, marker);
-  //           }
-  //       })(marker, i));
-  //
-  //       // Automatically center the map fitting all markers on the screen
-  //       map.fitBounds(bounds);
-  //   }
-
-
-
 
 }
 
@@ -132,20 +138,16 @@ var initialize = (data) => {
     for( i = 0; i < markers.length; i++ ) {
       console.log(markers[i])
         var position = new google.maps.LatLng(markers[i].lat, markers[i].lng);
+
+        let infowindow = new google.maps.InfoWindow({
+          content: contentString
+        });
+
         marker = new google.maps.Marker({
             position: position,
             map: map,
             title: markers[i].name
         });
-
-        // Allow each marker to have an info window
-        // google.maps.event.addListener(marker, 'click', (function(marker, i) {
-        //     return function() {
-        //         infoWindow.setContent(marker[i].name);
-        //         infoWindow.open(map, marker);
-        //     }
-        // })(marker, i));
-
 
     }
 
