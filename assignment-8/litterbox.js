@@ -69,7 +69,7 @@ var ledON = (microseconds) => {
   led.on();
   microseconds -= 13;
   if(microseconds > 0){
-    setTimeout(()=>{ ledOFF(microseconds) }); //on for 13 microseconds
+    setTimeout( () => { ledOFF(microseconds) }); //on for 13 microseconds
   }
 }
 

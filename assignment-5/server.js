@@ -257,25 +257,106 @@ var refactorTime = () => {
   MongoClient.connect(url, function(err, db){
     if(err){return console.dir(err);}
     var collection = db.collection('aagroups');
+    var locations = [];
+    var locs = []
     collection.aggregate().toArray(function(err, docs){
       if(err){console.log(err)}
       else {
         for(var i = 0; i<docs.length;i++){
           console.log(i);
+          locations.push(docs[i].formatted_address);
+          // locations.push({
+          //   'address':docs[i].formatted_address,
+          //   'geometries':{'lat':docs[i].lat,'lng':docs[i].long},
+          //   'groups':[]
+          // });
           docs[i]['day'] = docs[i].time[0];
           docs[i]['time'] = docs[i].time.substr(docs[i].time.indexOf('-') + 1);
           // group['day'] = docs[i].time[0];
           // group['time'] = docs[i].time.substr(docs[i].index)
           // meetingsData.push(group);
+
         }
-        console.log(docs.length);
-        for(var j = 0; j<docs.length; j++){
-          console.log('hey')
-          db.collection('aagroups_02').insert(docs[j]);
+        locations = uniq_fast(locations)
+
+        //put each group into coresponding location
+        for( var k = 0; k<locations.length; k++){
+          var loc = {};
+          loc['address'] = locations[k];
+          loc['groups'] = [];
+          loc['geometries'] = {'lat':docs[k].lat,'lng':docs[k].long}
+          for (var l = 0; l<docs.length;l++){
+
+            if(locations[k] == docs[l].formatted_address){
+              //add matched group to current location
+              console.log('match')
+              loc['groups'].push({
+                'name':docs[l].name,
+                'time':docs[l].day,
+                'day':docs[l].time,
+                'link':docs[l].link,
+                'region':docs[l].region
+              });
+            }
+          }
+          locs.push(loc);
+        }
+
+        console.log(locations.length);
+        for(var j = 0; j<locations.length; j++){
+          db.collection('aagroups_03').insert(locs[j]);
         }
       }
     });
   });
+}
+
+var refactordb = () => {
+  var locations = []
+  fs.readFile('data/google-meeting-groups.json','utf8',(err,data)=>{
+
+    d = JSON.parse(data);
+
+    for(var i = 0; i<d.length;i++){
+      locations.push(d[i].formatted_address);
+    }
+    locations = uniq_fast(locations);
+    for(var j = 0; j<locations.length;j++){
+      var loc = {
+        'location':locations[i]
+      };
+
+      for(var k = 0; k<d.length;k++){
+        var groups = [];
+        if(loc == d[k].formatted_address){
+          //add group to same location
+          loc['geometries'] = d[k].geometries;
+          // groups.push({
+          //   'name':d[k].name,
+          //   ''
+          // });
+        }
+      }
+    }
+  });
+}
+
+function uniq_fast(a) {
+    var seen = {};
+    var out = [];
+    var len = a.length;
+    var j = 0;
+    console.log(a[0])
+    for(var i = 0; i < len; i++) {
+         var item = a[i];
+
+         if(seen[item] !== 1) {
+
+               seen[item] = 1;
+               out[j++] = item;
+         }
+    }
+    return out;
 }
 
 var updateTime = (db,callback) => {
@@ -345,6 +426,7 @@ prompt.get(['function'], (err, result) => {
     // doTheThings.getGeometries();
   } else if(result.function == 5){
     refactorTime();
+    // refactordb();
     // UpdateTime();
     // update_time();
   } else if(result.function == 6){

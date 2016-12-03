@@ -1,5 +1,6 @@
 var fs = require('fs');
 var cheerio = require('cheerio');
+var cheerioTableparser = require('cheerio-tableparser');
 
 // var content = fs.readFileSync('/home/ubuntu/workspace/data/syllabus.txt');
 //
@@ -30,31 +31,67 @@ var htmlScraper = (function(){
         console.log(err);
       } else {
         var $ = cheerio.load(data);
-        // var indexed = $('center').get();
-        var indexed = $('table')
-        .children('tbody')
-        .each(function(i,elem){
-          $('.detailsBox').remove();
-          var location = $(elem).children('tr').find('td').eq(0);
-          // location.remove('h4');
-          console.log(location.text());
-          // console.log($(elem).children('tr').find('td').eq(0).text());
-        });
-        // console.log(indexed);
-        // .each(function(i,elem){
-        //   // console.log($(this).find('h4').text());
-        //   console.log('--------------')
-        //   console.log($(elem).length);
-        //   // $(elem).remove('h4');
-        //   // $(elem).remove('br');
-        //   // $(elem).remove('b');
-        //   // $(elem).remove('div');
-        //   // console.log($(elem).text());
+        var items = [];
+        // $('table')
+        // .children('tbody').each(function(i,elem){
+        //   console.log('//////////////');
+        //   console.log($(this).eq(0).text());
+        //   corpus = $(this).eq(0).text();
         // });
 
-        // console.log(indexed);
-        // var sliced = $('center').slice(1).eq(0).text();
-        // console.log(indexed);
+        // var rows = $('table').find('tr');
+        // for(var i = 0; i<rows.length;i++){
+        //   var current = rows[i];
+        //   console.log('iteration loop: ' + i);
+        //   console.log(rows.cells.length);
+        //   console.log($(current).children().text());
+        // };
+
+
+        $('table').addClass = 'complicated';
+        var t = cheerio.load($('table').html());
+        // console.log(table.html());
+        cheerioTableparser(t);
+        var d = t('table').parsetable(false,false,true);
+        // for(var i = 0; i<d.length;i++){
+        //   for(var j = 0; j<d[i].length;i++){
+        //     d[i][j]
+        //   }
+        // }
+        console.log(d[5]);
+        // console.log(d[0]);
+        // for(var i = 0; i<d.length;i++){
+        //   d[0].trim();
+        // }
+
+
+        // var corpus = $('table')
+        // .children('tbody')
+        // .eq(0).text();
+        // console.log(corpus);
+
+        // console.log(corpus);
+
+        // var index = $('table')
+        //   .children('tbody')
+        //   .children('tr')
+        //   .find('td').eq(0)
+        //   .each(function(i,elem){
+        //     console.log($(elem).text());
+        //   });
+        // .children('tbody')
+        // .children('tr')
+        // .find('td').eq(0);
+        // console.log(index.text());
+
+        // var indexed = $('table')
+        // .children('tbody')
+        // .each(function(i,elem){
+        //   $('.detailsBox').remove();
+        //   var location = $(elem).children('tr').find('td').eq(0);
+        //   console.log(location.text());
+        // });
+
         if(count < 1){
         readFileRecursively(path,count,suffix);
         }

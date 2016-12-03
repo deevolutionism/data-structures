@@ -41,7 +41,7 @@ var write = function(count, doc) { //write the data to disk
       console.log(fileName);
       write(count += 1);
       }
-      console.log('suceeded in saving');
+      
     }
   });
 }

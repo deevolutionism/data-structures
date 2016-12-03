@@ -63,6 +63,7 @@ var doTheThings = {
     //store geomertries with the group
 
     async.eachSeries(addresses, function(value, callback) {
+        console.log(value);
         var apiRequest = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + value.split(' ').join('+') + '&key=' + apiKey;
         var group = _.findKey(meetingsData, function(group){return group.address == value;});
         console.log(group);
@@ -71,6 +72,7 @@ var doTheThings = {
             if(JSON.parse(body).status == 'OK'){
               console.log(emoji.emojify(':globe_with_meridians: '+JSON.parse(body).results[0].geometry.location));
               meetingsData[group].geometries = JSON.parse(body).results[0].geometry.location;
+              meetingsData[group].formattedAddress = JSON.parse(body).results[0].formattedAddress;
             // _.set(meetingsData,group.geometries,JSON.parse(body).results[0].geometry.location);
             // console.log(meetingsData[group]);
           }
@@ -91,10 +93,10 @@ var doTheThings = {
     request(url,function(error,response,body){
       if(!error && response.statusCode == 200){
         fs.writeFile('data/aameetings.txt',body,function(err){
-          if(err){
+          if(err) {
             console.log(err);
-          } else{
-            return callback()
+          } else {
+            return callback();
           }
         });
       } else {

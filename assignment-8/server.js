@@ -1,7 +1,7 @@
 var pg = require('pg');
 
 // connection string
-var un = 'gentry'
+var un = 'litterbox'
 var pw = 'litterbox'
 var db = 'litterbox'
 var ep = 'litterbox.cd9twrbg1o5s.us-west-2.rds.amazonaws.com:5432';

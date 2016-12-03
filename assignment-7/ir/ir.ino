@@ -1,9 +1,9 @@
 #include <Adafruit_NeoPixel.h>
 
 #define PIN 1
-#define     IR_LED                 0         // Digital pin that is hooked up to the IR LED.
+#define     IR_LED                 13         // Digital pin that is hooked up to the IR LED.
 #define     IR_SENSOR              2     
-#define     BASKET_CHECK_SECONDS   0.1  //How often it checks to see if there is a ball.
+#define     TOILET_CHECK_SECONDS   0.1  //How often it checks to see if there is a ball.
 unsigned long startTime;
 unsigned long endTime;
 boolean recording;
@@ -27,7 +27,7 @@ void setup(void){
 // Called continuously after setup function.
 ///////////////////////////////////////////////////////
 void loop(void) {
-  if (isBallInHoop()) {  
+  if (isPooping()) {  
 //    Serial.println("activity detected");
       if(recording == false){
         recording = true; //start recording time
@@ -35,36 +35,36 @@ void loop(void) {
       }
   } else {
       if(recording == true){
-      Serial.println("Duration:");
-      Serial.println(millis() - startTime); //get duration
+        Serial.println(String(startTime) + ", " + String(millis()-startTime)); 
       recording = false; //stop recording time
       }
 //    Serial.println("no activity");
   }
   
-  // Delay for 100 milliseconds so the ball in hoop check happens 10 times a second.
-  delay(100);
+  
+ // Delay for 100 milliseconds so the ball in hoop check happens 10 times a second.
+ delay(100);
 }
 
 
 
 ///////////////////////////////////////////////////////
-// isBallInHoop function
+// isPooping function
 //
-// Returns true if a ball is blocking the sensor.
+// Returns true if a person is on the toilet and blocking
+// the sensor.
 ///////////////////////////////////////////////////////
-boolean isBallInHoop() {
+boolean isPooping() {
   // Pulse the IR LED at 38khz for 1 millisecond
 //  Serial.println("pulsing IR");
   pulseIR(1000);
 
   // Check if the IR sensor picked up the pulse (i.e. output wire went to ground).
   if (digitalRead(IR_SENSOR) == LOW) {
-//    endTime = millis();
     
     return false; // Sensor can see LED, return false.
   } else {
-//    startTime = millis();
+
   }
   
   return true; // Sensor can't see LED, return true.
@@ -104,8 +104,6 @@ void pulseIR(long microsecs) {
 
   void timer() {
     startTime = millis();
-    Serial.println("activity start:");
-    Serial.println(startTime);
   }
 
 

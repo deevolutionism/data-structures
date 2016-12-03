@@ -1,7 +1,7 @@
 {
-  "name": "assignment-2",
+  "name": "litterboxtracker",
   "version": "1.0.0",
-  "description": "data-structures hw 2",
+  "description": "track cat litterbox use",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,8 +9,10 @@
   },
   "author": "Gentry Demchak",
   "license": "ISC",
+  "engines": {
+    "node": "5.9.1"
+  },
   "dependencies": {
-    "cheerio": "^0.22.0",
-    "cheerio-tableparser": "^1.0.1"
+    "pg": "^6.1.0"
   }
 }
