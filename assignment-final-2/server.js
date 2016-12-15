@@ -8,18 +8,6 @@ var db = 'litterbox';
 var ep = 'litterbox.cd9twrbg1o5s.us-west-2.rds.amazonaws.com:5432';
 var conString = `postgres://${un}:${pw}@${ep}/${db}`;+ un + ":" + pw + "@" + ep + "/" + db;
 
-
-// var query = "SELECT timelitterboxused FROM litterbox";
-// var query = "SELECT timelitterboxused, date_trunc('month', to_timestamp(timelitterboxused)) FROM litterbox"
-// var query = "SELECT TIMESTAMP 'epoch' + timelitterboxused FROM litterbox * INTERVAL '1 second'";
-// var query = "CREATE OR REPLACE VIEW converted AS " +
-// "SELECT timelitterboxused, " +
-//       "TIMESTAMP 'epoch' + timelitterboxused * INTERVAL '1 second' as ah_real_datetime " +
-// "FROM litterbox";
-
-//var query = "SELECT to_timestamp(timelitterboxused) FROM litterbox GROUP BY timelitterboxused";
-//get all the times => group them by day =>
-// var query = "SELECT count(*), to_timestamp(timelitterboxused) as datelitterboxused FROM litterbox GROUP BY datelitterboxused"
 var query = "SELECT count(*), date_trunc('day', to_timestamp(timelitterboxused)) as datelitterboxused FROM litterbox GROUP BY datelitterboxused"
 
 
