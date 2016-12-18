@@ -11,8 +11,12 @@ I didn't want to invade my cats privacy nor did I want to have to be next to the
 #### Setup
 ![setup documentation](litterbox_doc.png)
 
-#### Interface mockup
-![Possible interface](litterbox_interface_mockup-01.png)
-
 #### Heroku deployment
+
+##### [Heroku App](https://litterboxtracker.herokuapp.com/)
+
 ![heroku deployment](deployment.png)
+
+#### Interface mockup
+The data from the backend is packaged so that each day is paired with the total number of litter box uses. That count can then be used to color the diagram, where each box represents a day of the week from Monday through Sunday. The time frame is derived from the beginning and end dates provided by the API.
+![Possible interface](litterbox_interface_mockup-01.png)

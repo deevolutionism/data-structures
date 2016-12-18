@@ -17,7 +17,7 @@ app.get('/latlng', (req, res) => {
 });
 
 /*
-EXAMPLE OUTPUT JSON 
+EXAMPLE OUTPUT JSON
 {
   'location': 'utica ave, brooklyn ny, 11233',
   'geometries': {
@@ -26,10 +26,38 @@ EXAMPLE OUTPUT JSON
   },
   'groups': [
     {
-      'name':'group1'
-      'time':08:00,
-      'day':2
+      'name':'group1',
+      'notes':'blah blah',
+      'borough':'manhattan'
+      'day':[
+        'tuesday',
+        'wednesday'
+      ],
+      'times':[
+        08:00 PM,
+        11:00 PM,
+        2:00 AM
+      ],
+      'types':[
+        'closed',
+        'open'
+      ]
+
     },
+    {
+      'name':'group2',
+      'notes':'blah blah',
+      'borough':'manhattan'
+      'times': [
+        10:00 AM,
+        12:00 PM,
+        4:00 PM
+      ],
+      'types':[
+        'closed'
+    ]
+
+    }
   ]
 }
 */
@@ -50,14 +78,57 @@ var aggregate = (callback) => {
     var collection = db.collection('aagroups_02');
 
     collection.aggregate([
+      //match - find all meetings happening from now until 4am tomorrow
       {
         $match: {
-          $and: [
-            {day:d.toString()},
-            {time: {$gte:getHour(h)} }
+          $or: [
+            {$and: [
+              {day:d.toString()},
+              {time: {$gte:getHour(h)} }
+            ]},
+            {$and: [
+              {day: nextDay(d).toString()},
+              {time: {$lte:'04:00'}}
+            ]}
           ]
         }
+      },
+
+      //group - meeting names
+      {
+        $group: {
+          _id : {
+            lat: "$lat",
+            lng: "$long",
+            name: "$name",
+            region: "$region",
+            address: "$formatted_address",
+            link: "$link"
+          },
+          days: { $push: "$day"},
+          times: { $push: "$time"},
+          types: { $push: "$tye"}
+        }
+      },
+
+      //group - meetings which share location together
+      {
+        $group: {
+          _id : {
+            lat: "$_id.lat",
+            lng: "$_id.lng",
+          },
+          meetingGroups: {
+            $push: {
+              groupInfo: "$_id",
+              days: "$days",
+              times: "$times",
+              types: "$types"
+            }
+          }
+        }
       }
+
     ]).toArray( (err, docs) => {
       if(err) {console.log(err)}
       else {
@@ -78,4 +149,8 @@ var getHour = (hour) => {
     var h = `${hour}:00`;
     return h
   }
+}
+
+var nextDay = (day) => {
+  return day+1;
 }

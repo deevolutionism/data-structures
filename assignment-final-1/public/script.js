@@ -8,9 +8,7 @@ var getMapData = () => {
     async: false,
     success: (data) => {
       console.log(data);
-      // initMap(data);
-      // initialize(data);
-      example(data);
+      initialize(data);
     },
     error: (err) => {
       console.log(err);
@@ -20,12 +18,13 @@ var getMapData = () => {
 }
 
 
-var example = (data) => {
+var initialize = (data) => {
   var locations = [];
   var names = [];
   var groups = [];
+  let windowContent = "";
   for(let i = 0; i < data.result.length; i++){
-    locations.push({'lat':data.result[i].lat,'lng':data.result[i].long});
+    locations.push({'lat':data.result[i]._id.lat,'lng':data.result[i]._id.lng});
     names.push(data.result[i].name)
     groups.push(data.result[i]);
   }
@@ -42,16 +41,21 @@ var example = (data) => {
       map: map
     });
 
+    let groups = [];
+
+    for(var j = 0; j < data.result[i].meetingGroups.length; j++){
+      groups.push(`
+        <p>Name: <b>${data.result[i].meetingGroups[j].groupInfo.name}</b></p>
+        <p>Day: <b>${num_to_day(data.result[i].meetingGroups[j].days)}</b></p>
+        <p>Time: <b>${data.result[i].meetingGroups[j].times[0]}</b></p>
+        `)
+    }
+
     let windowContent = `
-      <h1>${data.result[i].name}</h1>
-      <ul>
-        <li>${data.result[i].time}</li>
-        <li>${data.result[i].location}, ${data.result[i].formatted_address}</li>
-        <li>${data.result[i].type}</li>
-        <li><a href=${data.result[i].link}>${data.result[i].link}</a></li>
-        <li>${num_to_day(data.result[i].day)}</li>
-      </ul>
+      <h1>${data.result[i].meetingGroups[0].groupInfo.address}</h1>
+      ${groups}
     `
+
 
     marker.addListener('click', () => {
       infowindow.close(); // Close previously opened infowindow
@@ -64,7 +68,7 @@ var example = (data) => {
 
 
 var num_to_day = (num) => {
-  switch (num) {
+  switch (num.toString()) {
     case '0':
       return 'Sunday'
       break;
@@ -89,66 +93,4 @@ var num_to_day = (num) => {
     default:
       return undefined
   }
-}
-
-
-var initMap = (data) => {
-  var map;
-  var locations = [];
-  for(let i = 0; i < data.result.length; i++){
-    locations.push({'lat':data.result[i].lat,'lng':data.result[i].long});
-  }
-
-  let marker = new google.maps.Marker({
-    position: new google.maps.LatLng(locations[0].lat,locations[0].lng),
-    map: map
-  });
-
-  map = new google.maps.Map(document.getElementById('map'), {
-    center: {lat: 40.7831, lng: -73.9712},
-    zoom: 12
-  });
-
-}
-
-
-
-
-var initialize = (data) => {
-    var map;
-    var markers = [];
-
-    // Display a map on the page
-    map = new google.maps.Map(document.getElementById('map'), {
-      center: {lat: 40.7831, lng: -73.9712},
-      zoom: 12
-    });
-
-    // Multiple Markers
-    for(var j = 0; j<data.result.length; j++){
-      markers.push({"lat":data.result.lat,"lng":data.result.long});
-    }
-
-
-
-    // Display multiple markers on a map
-    // var infoWindow = new google.maps.InfoWindow(), marker, i;
-
-    // Loop through our array of markers & place each one on the map
-    for( i = 0; i < markers.length; i++ ) {
-      console.log(markers[i])
-        var position = new google.maps.LatLng(markers[i].lat, markers[i].lng);
-
-        let infowindow = new google.maps.InfoWindow({
-          content: contentString
-        });
-
-        marker = new google.maps.Marker({
-            position: position,
-            map: map,
-            title: markers[i].name
-        });
-
-    }
-
 }
